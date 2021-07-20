@@ -28,6 +28,7 @@ class StopwatchAdapter(private val listener: StopwatchListener)
         val layoutInflater = LayoutInflater.from(parent.context)
         val binding = TimerLayoutBinding.inflate(layoutInflater, parent, false)
 
+
         return StopwatchViewHolder(binding,  listener, binding.root.context.resources)
     }
 

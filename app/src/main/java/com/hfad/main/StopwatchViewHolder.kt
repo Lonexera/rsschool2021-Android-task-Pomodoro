@@ -1,17 +1,20 @@
 package com.hfad.main
 
+import android.content.Intent
 import android.content.res.Resources
 import android.graphics.drawable.AnimationDrawable
 import android.os.CountDownTimer
 import androidx.core.view.isInvisible
+import androidx.lifecycle.*
 import androidx.recyclerview.widget.RecyclerView
 import com.hfad.main.databinding.TimerLayoutBinding
+import kotlinx.coroutines.Dispatchers
 
 class StopwatchViewHolder(private val binding: TimerLayoutBinding,
                           private val listener: StopwatchListener,
                           private val resources: Resources
 ) :
-    RecyclerView.ViewHolder(binding.root) {
+    RecyclerView.ViewHolder(binding.root), LifecycleObserver {
 
     private var timer: CountDownTimer? = null
     private var startTime = 0L
@@ -31,6 +34,8 @@ class StopwatchViewHolder(private val binding: TimerLayoutBinding,
 
     private fun startTimer(stopwatch: Stopwatch) {
         binding.startStopButton.setText(R.string.stop_button_text)
+
+
         timer?.cancel()
         timer = getCountDownTimer(stopwatch)
         timer?.start()
@@ -60,6 +65,7 @@ class StopwatchViewHolder(private val binding: TimerLayoutBinding,
         binding.deleteButton.setOnClickListener { listener.delete(stopwatch.id) }
     }
 
+
     private fun getCountDownTimer(stopwatch: Stopwatch) : CountDownTimer {
         return object : CountDownTimer(PERIOD, INTERVAL_MS) {
 
@@ -81,28 +87,9 @@ class StopwatchViewHolder(private val binding: TimerLayoutBinding,
         }
     }
 
-    private fun Long.displayTime(): String {
-        if (this <= 0L) {
-            return START_TIME
-        }
-        val h = this / 1000 / 3600
-        val m = this / 1000 % 3600 / 60
-        val s = this / 1000 % 60
 
-        return "${displaySlot(h)}:${displaySlot(m)}:${displaySlot(s)}"
-    }
-
-    private fun displaySlot(count: Long): String {
-        return if (count / 10L > 0) {
-            "$count"
-        } else {
-            "0$count"
-        }
-    }
 
     private companion object {
-
-        private const val START_TIME = "00:00:00"
         private const val INTERVAL_MS = 500L
         private const val PERIOD  = 1000L * 60L * 60L * 24L // Day
 
