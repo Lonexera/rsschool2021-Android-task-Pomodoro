@@ -11,7 +11,6 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.*
-import java.time.LocalTime
 
 class ForegroundService : Service() {
 
@@ -50,14 +49,15 @@ class ForegroundService : Service() {
         when (intent?.extras?.getString(COMMAND_ID) ?: INVALID) {
             COMMAND_START -> {
                 val startTime = intent?.extras?.getLong(STARTED_TIMER_TIME_MS) ?: return
-                commandStart(startTime)
+                val currentMs = intent?.extras?.getLong(TIME_LEFT) ?: return
+                commandStart(startTime, currentMs)
             }
             COMMAND_STOP -> commandStop()
             INVALID -> return
         }
     }
 
-    private fun commandStart(startTime: Long) {
+    private fun commandStart(startTime: Long, currentMs: Long) {
         if (isServiceStarted) {
             return
         }
@@ -65,20 +65,20 @@ class ForegroundService : Service() {
         try {
             moveToStartedState()
             startForegroundAndShowNotification()
-            continueTimer(startTime)
+            continueTimer(startTime, currentMs)
         } finally {
             isServiceStarted = true
         }
     }
 
-    private fun continueTimer(leftTime: Long) {
+    private fun continueTimer(startTime: Long, currentMs: Long) {
 
         job = GlobalScope.launch(Dispatchers.Main) {
             while (true) {
                 notificationManager?.notify(
                     NOTIFICATION_ID,
                     getNotification(
-                        (System.currentTimeMillis() - leftTime).displayTime().dropLast(3)
+                        (currentMs - (System.currentTimeMillis() - startTime)).displayTime()
                     )
                 )
                 delay(INTERVAL)

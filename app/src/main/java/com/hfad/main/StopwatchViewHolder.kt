@@ -1,14 +1,13 @@
 package com.hfad.main
 
-import android.content.Intent
 import android.content.res.Resources
 import android.graphics.drawable.AnimationDrawable
-import android.os.CountDownTimer
+import android.util.Log
 import androidx.core.view.isInvisible
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.RecyclerView
 import com.hfad.main.databinding.TimerLayoutBinding
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 
 class StopwatchViewHolder(private val binding: TimerLayoutBinding,
                           private val listener: StopwatchListener,
@@ -16,13 +15,12 @@ class StopwatchViewHolder(private val binding: TimerLayoutBinding,
 ) :
     RecyclerView.ViewHolder(binding.root), LifecycleObserver {
 
-    private var timer: CountDownTimer? = null
-    private var startTime = 0L
+    private var job: Job? = null
 
     fun bind(stopwatch: Stopwatch) {
-        binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
+        binding.stopwatchTimer.text = stopwatch.msLeft.displayTime()
         binding.customView.setWholeMs(stopwatch.wholeMs)
-        binding.customView.setCurrent(stopwatch.currentMs)
+        binding.customView.setCurrent(stopwatch.msLeft)
 
         if (stopwatch.isStarted)
             startTimer(stopwatch)
@@ -35,10 +33,9 @@ class StopwatchViewHolder(private val binding: TimerLayoutBinding,
     private fun startTimer(stopwatch: Stopwatch) {
         binding.startStopButton.setText(R.string.stop_button_text)
 
+        job?.cancel()
 
-        timer?.cancel()
-        timer = getCountDownTimer(stopwatch)
-        timer?.start()
+        continueTimer(stopwatch)
 
         binding.blinkingIndicator.isInvisible = false
         (binding.blinkingIndicator.background as? AnimationDrawable)?.start()
@@ -47,7 +44,14 @@ class StopwatchViewHolder(private val binding: TimerLayoutBinding,
     private fun stopTimer(stopwatch: Stopwatch) {
         binding.startStopButton.setText(R.string.start_button_text)
 
-        timer?.cancel()
+        try {
+            Log.e("EXCEPTION", "Job cancellation should be here")
+/*            if (job == null)
+                Log.e("EXCEPTION", "Job is null")*/
+            job?.cancel()
+        } catch (e:Exception) {
+            Log.e("EXCEPTION", "Job cancellation failed")
+        }
 
         binding.blinkingIndicator.isInvisible = true
         (binding.blinkingIndicator.background as? AnimationDrawable)?.stop()
@@ -56,38 +60,35 @@ class StopwatchViewHolder(private val binding: TimerLayoutBinding,
     private fun initButtonsListeners(stopwatch: Stopwatch) {
         binding.startStopButton.setOnClickListener {
             if (stopwatch.isStarted) {
-                listener.stop(stopwatch.id, stopwatch.currentMs)
+                stopwatch.msLeft -= (System.currentTimeMillis() - stopwatch.startTime)
+                listener.stop(stopwatch.id, stopwatch.msLeft)
             } else {
+                stopwatch.startTime = System.currentTimeMillis()
                 listener.start(stopwatch.id)
             }
         }
 
-        binding.deleteButton.setOnClickListener { listener.delete(stopwatch.id) }
-    }
-
-
-    private fun getCountDownTimer(stopwatch: Stopwatch) : CountDownTimer {
-        return object : CountDownTimer(PERIOD, INTERVAL_MS) {
-
-            val interval = INTERVAL_MS
-
-            override fun onTick(millisUntilFinished: Long) {
-                stopwatch.currentMs -= interval
-                binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
-
-                binding.customView.setCurrent(stopwatch.currentMs)
-            }
-
-            override fun onFinish() {
-                binding.stopwatchTimer.text = stopwatch.currentMs.displayTime()
-
-                binding.customView.setCurrent(stopwatch.currentMs)
-            }
-
+        binding.deleteButton.setOnClickListener {
+            stopTimer(stopwatch)
+            listener.delete(stopwatch.id)
         }
     }
 
 
+    private fun continueTimer(stopwatch: Stopwatch)  {
+        job = GlobalScope.launch(Dispatchers.Main) {
+            while (true) {
+                Log.i("TAG", "Coroutine is on.")
+                val timePassed = stopwatch.msLeft -
+                        (System.currentTimeMillis() - stopwatch.startTime)
+
+                binding.stopwatchTimer.text = timePassed.displayTime()
+                binding.customView.setCurrent(timePassed)
+
+                delay(INTERVAL_MS)
+            }
+        }
+    }
 
     private companion object {
         private const val INTERVAL_MS = 500L

@@ -18,7 +18,7 @@ class StopwatchAdapter(private val listener: StopwatchListener)
             }
 
             override fun areContentsTheSame(oldItem: Stopwatch, newItem: Stopwatch): Boolean {
-                return oldItem.currentMs == newItem.currentMs &&
+                return oldItem.msLeft == newItem.msLeft &&
                         oldItem.isStarted == newItem.isStarted
             }
         }

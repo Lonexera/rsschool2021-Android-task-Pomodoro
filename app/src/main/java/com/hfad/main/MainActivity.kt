@@ -3,7 +3,6 @@ package com.hfad.main
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
@@ -39,7 +38,7 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
                     val msToTimer: Long = Integer
                         .parseInt(inputMinutes.text.toString())
                         .toLong() * 60 * 1000
-                    stopwatches.add(Stopwatch(nextId++, msToTimer, msToTimer,false))
+                    stopwatches.add(Stopwatch(nextId++, msToTimer, msToTimer,0,false))
                     stopwatchAdapter.submitList(stopwatches.toList())
                 }
                 else {
@@ -63,36 +62,37 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
     override fun start(id: Int) {
         if (isAnyTimerOn) {
             val timerId: Int = findStartedTimerId()
-            stop(timerId, stopwatches[timerId].currentMs)
+            if (timerId != NOT_FOUND) {
+                val msPassed = System.currentTimeMillis() - stopwatches[timerId].startTime
+                stop(timerId, stopwatches[timerId].msLeft - msPassed)
+            }
         }
 
         changeStopwatch(id, null, true)
         isAnyTimerOn = true
     }
 
-    override fun stop(id: Int, currentMs: Long) {
-        changeStopwatch(id, currentMs, false)
+    override fun stop(id: Int, msLeft: Long) {
+        changeStopwatch(id, msLeft, false)
         isAnyTimerOn = false
     }
 
     override fun delete(id: Int) {
         stopwatches.remove(stopwatches.find { it.id == id })
         stopwatchAdapter.submitList(stopwatches.toList())
+        stopwatchAdapter.notifyDataSetChanged()
     }
 
-    private fun changeStopwatch(id: Int, currentMs: Long?, isStarted: Boolean) {
-        val newTimers = mutableListOf<Stopwatch>()
-        stopwatches.forEach {
-            if (it.id == id) {
-                newTimers.add(Stopwatch(it.id, currentMs ?: it.currentMs,
-                     it.wholeMs, isStarted))
-            } else {
-                newTimers.add(it)
+    private fun changeStopwatch(id: Int, msLeft: Long?, isStarted: Boolean) {
+
+        stopwatches.forEach { stopwatch ->
+            if (stopwatch.id == id) {
+                stopwatch.msLeft = msLeft ?: stopwatch.msLeft
+                stopwatch.isStarted = isStarted
             }
         }
-        stopwatchAdapter.submitList(newTimers)
-        stopwatches.clear()
-        stopwatches.addAll(newTimers)
+        stopwatchAdapter.submitList(stopwatches)
+        stopwatchAdapter.notifyDataSetChanged()
     }
 
     private fun isInputValid() : Boolean {
@@ -107,7 +107,7 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
             }
         }
 
-        return -1
+        return NOT_FOUND
     }
 
 
@@ -117,9 +117,11 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
         if (isAnyTimerOn) {
             val startedTimerId = findStartedTimerId()
 
+            println(stopwatches[startedTimerId].startTime)
             val startIntent = Intent(this, ForegroundService::class.java)
             startIntent.putExtra(COMMAND_ID, COMMAND_START)
-            startIntent.putExtra(STARTED_TIMER_TIME_MS, stopwatches[startedTimerId].currentMs)
+            startIntent.putExtra(STARTED_TIMER_TIME_MS, stopwatches[startedTimerId].startTime)
+            startIntent.putExtra(TIME_LEFT, stopwatches[startedTimerId].msLeft)
             startService(startIntent)
         }
     }
