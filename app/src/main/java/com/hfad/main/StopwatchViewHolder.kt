@@ -1,9 +1,11 @@
 package com.hfad.main
 
 import android.content.res.Resources
+import android.graphics.Color
 import android.graphics.drawable.AnimationDrawable
 import android.util.Log
 import androidx.core.view.isInvisible
+import androidx.core.view.isVisible
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.RecyclerView
 import com.hfad.main.databinding.TimerLayoutBinding
@@ -20,7 +22,12 @@ class StopwatchViewHolder(private val binding: TimerLayoutBinding,
     fun bind(stopwatch: Stopwatch) {
         binding.stopwatchTimer.text = stopwatch.msLeft.displayTime()
         binding.customView.setWholeMs(stopwatch.wholeMs)
-        binding.customView.setCurrent(stopwatch.msLeft)
+
+        if (stopwatch.wholeMs == 0L) {
+            disableView()
+        } else {
+            enableView()
+        }
 
         if (stopwatch.isStarted)
             startTimer(stopwatch)
@@ -44,14 +51,7 @@ class StopwatchViewHolder(private val binding: TimerLayoutBinding,
     private fun stopTimer(stopwatch: Stopwatch) {
         binding.startStopButton.setText(R.string.start_button_text)
 
-        try {
-            Log.e("EXCEPTION", "Job cancellation should be here")
-/*            if (job == null)
-                Log.e("EXCEPTION", "Job is null")*/
-            job?.cancel()
-        } catch (e:Exception) {
-            Log.e("EXCEPTION", "Job cancellation failed")
-        }
+        job?.cancel()
 
         binding.blinkingIndicator.isInvisible = true
         (binding.blinkingIndicator.background as? AnimationDrawable)?.stop()
@@ -85,15 +85,44 @@ class StopwatchViewHolder(private val binding: TimerLayoutBinding,
                 binding.stopwatchTimer.text = timePassed.displayTime()
                 binding.customView.setCurrent(timePassed)
 
+                if (timePassed <= 0) {
+                    binding.stopwatchTimer.text = stopwatch.wholeMs.displayTime()
+                    disableView()
+                    stopTimer(stopwatch)
+                }
+
                 delay(INTERVAL_MS)
             }
         }
     }
 
+    private fun disableView() {
+        with(binding) {
+            cardView.setBackgroundColor(Color.RED)
+            stopwatchTimer.setTextColor(Color.WHITE)
+
+            customView.isVisible = false
+            startStopButton.isEnabled = false
+            deleteButton.setColorFilter(Color.WHITE)
+            deleteButton.setBackgroundColor(Color.RED)
+        }
+    }
+
+    private fun enableView() {
+        with(binding) {
+            cardView.setBackgroundColor(Color.WHITE)
+            stopwatchTimer.setTextColor(Color.GRAY)
+
+            customView.isVisible = true
+            startStopButton.isEnabled = true
+            deleteButton.setColorFilter(Color.RED)
+            deleteButton.setBackgroundColor(Color.WHITE)
+        }
+    }
+
+
     private companion object {
         private const val INTERVAL_MS = 500L
-        private const val PERIOD  = 1000L * 60L * 60L * 24L // Day
-
     }
 
 }
