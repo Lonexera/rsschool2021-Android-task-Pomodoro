@@ -1,6 +1,6 @@
 package com.hfad.main
 
-interface StopwatchListener {
+interface TimerListener {
 
     fun start(id: Int)
     fun stop(id: Int, msLeft: Long)

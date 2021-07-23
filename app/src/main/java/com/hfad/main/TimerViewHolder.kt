@@ -3,7 +3,6 @@ package com.hfad.main
 import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.drawable.AnimationDrawable
-import android.util.Log
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.lifecycle.*
@@ -11,44 +10,44 @@ import androidx.recyclerview.widget.RecyclerView
 import com.hfad.main.databinding.TimerLayoutBinding
 import kotlinx.coroutines.*
 
-class StopwatchViewHolder(private val binding: TimerLayoutBinding,
-                          private val listener: StopwatchListener,
-                          private val resources: Resources
+class TimerViewHolder(private val binding: TimerLayoutBinding,
+                      private val listener: TimerListener,
+                      private val resources: Resources
 ) :
     RecyclerView.ViewHolder(binding.root), LifecycleObserver {
 
     private var job: Job? = null
 
-    fun bind(stopwatch: Stopwatch) {
-        binding.stopwatchTimer.text = stopwatch.msLeft.displayTime()
-        binding.customView.setWholeMs(stopwatch.wholeMs)
+    fun bind(timer: Timer) {
+        binding.stopwatchTimer.text = timer.msLeft.displayTime()
+        binding.pieView.setWholeMs(timer.wholeMs)
 
-        if (stopwatch.wholeMs == 0L) {
+        if (timer.wholeMs == 0L) {
             disableView()
         } else {
             enableView()
         }
 
-        if (stopwatch.isStarted)
-            startTimer(stopwatch)
+        if (timer.isStarted)
+            startTimer(timer)
         else
-            stopTimer(stopwatch)
+            stopTimer(timer)
 
-        initButtonsListeners(stopwatch)
+        initButtonsListeners(timer)
     }
 
-    private fun startTimer(stopwatch: Stopwatch) {
+    private fun startTimer(timer: Timer) {
         binding.startStopButton.setText(R.string.stop_button_text)
 
         job?.cancel()
 
-        continueTimer(stopwatch)
+        continueTimer(timer)
 
         binding.blinkingIndicator.isInvisible = false
         (binding.blinkingIndicator.background as? AnimationDrawable)?.start()
     }
 
-    private fun stopTimer(stopwatch: Stopwatch) {
+    private fun stopTimer(timer: Timer) {
         binding.startStopButton.setText(R.string.start_button_text)
 
         job?.cancel()
@@ -57,38 +56,37 @@ class StopwatchViewHolder(private val binding: TimerLayoutBinding,
         (binding.blinkingIndicator.background as? AnimationDrawable)?.stop()
     }
 
-    private fun initButtonsListeners(stopwatch: Stopwatch) {
+    private fun initButtonsListeners(timer: Timer) {
         binding.startStopButton.setOnClickListener {
-            if (stopwatch.isStarted) {
-                stopwatch.msLeft -= (System.currentTimeMillis() - stopwatch.startTime)
-                listener.stop(stopwatch.id, stopwatch.msLeft)
+            if (timer.isStarted) {
+                timer.msLeft -= (System.currentTimeMillis() - timer.startTime)
+                listener.stop(timer.id, timer.msLeft)
             } else {
-                stopwatch.startTime = System.currentTimeMillis()
-                listener.start(stopwatch.id)
+                timer.startTime = System.currentTimeMillis()
+                listener.start(timer.id)
             }
         }
 
         binding.deleteButton.setOnClickListener {
-            stopTimer(stopwatch)
-            listener.delete(stopwatch.id)
+            stopTimer(timer)
+            listener.delete(timer.id)
         }
     }
 
 
-    private fun continueTimer(stopwatch: Stopwatch)  {
+    private fun continueTimer(timer: Timer)  {
         job = GlobalScope.launch(Dispatchers.Main) {
             while (true) {
-                Log.i("TAG", "Coroutine is on.")
-                val timePassed = stopwatch.msLeft -
-                        (System.currentTimeMillis() - stopwatch.startTime)
+                val timePassed = timer.msLeft -
+                        (System.currentTimeMillis() - timer.startTime)
 
                 binding.stopwatchTimer.text = timePassed.displayTime()
-                binding.customView.setCurrent(timePassed)
+                binding.pieView.setCurrent(timePassed)
 
                 if (timePassed <= 0) {
-                    binding.stopwatchTimer.text = stopwatch.wholeMs.displayTime()
+                    binding.stopwatchTimer.text = timer.wholeMs.displayTime()
                     disableView()
-                    stopTimer(stopwatch)
+                    stopTimer(timer)
                 }
 
                 delay(INTERVAL_MS)
@@ -101,7 +99,7 @@ class StopwatchViewHolder(private val binding: TimerLayoutBinding,
             cardView.setBackgroundColor(Color.RED)
             stopwatchTimer.setTextColor(Color.WHITE)
 
-            customView.isVisible = false
+            pieView.isVisible = false
             startStopButton.isEnabled = false
             deleteButton.setColorFilter(Color.WHITE)
             deleteButton.setBackgroundColor(Color.RED)
@@ -113,7 +111,7 @@ class StopwatchViewHolder(private val binding: TimerLayoutBinding,
             cardView.setBackgroundColor(Color.WHITE)
             stopwatchTimer.setTextColor(Color.GRAY)
 
-            customView.isVisible = true
+            pieView.isVisible = true
             startStopButton.isEnabled = true
             deleteButton.setColorFilter(Color.RED)
             deleteButton.setBackgroundColor(Color.WHITE)

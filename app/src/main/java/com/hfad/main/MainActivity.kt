@@ -9,12 +9,13 @@ import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hfad.main.databinding.ActivityMainBinding
+import java.util.ArrayList
 
-class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
+class MainActivity : AppCompatActivity(), TimerListener, LifecycleObserver {
 
     private lateinit var binding: ActivityMainBinding
-    private val stopwatches = mutableListOf<Stopwatch>()
-    private val stopwatchAdapter = StopwatchAdapter(this)
+    private val timers = mutableListOf<Timer>()
+    private val timerAdapter = TimerAdapter(this)
     private var nextId = 0
     private var isAnyTimerOn: Boolean = false
 
@@ -28,7 +29,7 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
 
         binding.recycler.apply {
             layoutManager = LinearLayoutManager(context)
-            adapter = stopwatchAdapter
+            adapter = timerAdapter
         }
 
         with (binding) {
@@ -38,8 +39,8 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
                     val msToTimer: Long = Integer
                         .parseInt(inputMinutes.text.toString())
                         .toLong() * 60 * 1000
-                    stopwatches.add(Stopwatch(nextId++, msToTimer, msToTimer,0,false))
-                    stopwatchAdapter.submitList(stopwatches.toList())
+                    timers.add(Timer(nextId++, msToTimer, msToTimer,0,false))
+                    timerAdapter.submitList(timers.toList())
                 }
                 else {
                     inputMinutes.error = getString(R.string.input_error_text)
@@ -57,14 +58,25 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
             }
         }
 
+        if (savedInstanceState != null) {
+            nextId = savedInstanceState.getInt(NEXT_ID)
+            isAnyTimerOn = savedInstanceState.getBoolean(IS_ANY_TIMER_ON)
+            val timersArray = savedInstanceState.getParcelableArrayList<Timer>(TIMERS_ARRAY)
+            if (timersArray != null) {
+                timers.clear()
+                timers.addAll(timersArray)
+                timerAdapter.submitList(timers.toList())
+            }
+        }
+
     }
 
     override fun start(id: Int) {
         if (isAnyTimerOn) {
             val timerId: Int = findStartedTimerId()
             if (timerId != NOT_FOUND) {
-                val msPassed = System.currentTimeMillis() - stopwatches[timerId].startTime
-                stop(timerId, stopwatches[timerId].msLeft - msPassed)
+                val msPassed = System.currentTimeMillis() - timers[timerId].startTime
+                stop(timerId, timers[timerId].msLeft - msPassed)
             }
         }
 
@@ -78,21 +90,20 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
     }
 
     override fun delete(id: Int) {
-        stopwatches.remove(stopwatches.find { it.id == id })
-        stopwatchAdapter.submitList(stopwatches.toList())
-        stopwatchAdapter.notifyDataSetChanged()
+        timers.remove(timers.find { it.id == id })
+        timerAdapter.submitList(timers.toList())
     }
 
     private fun changeStopwatch(id: Int, msLeft: Long?, isStarted: Boolean) {
 
-        stopwatches.forEach { stopwatch ->
-            if (stopwatch.id == id) {
-                stopwatch.msLeft = msLeft ?: stopwatch.msLeft
-                stopwatch.isStarted = isStarted
+        timers.forEach { timer ->
+            if (timer.id == id) {
+                timer.msLeft = msLeft ?: timer.msLeft
+                timer.isStarted = isStarted
             }
         }
-        stopwatchAdapter.submitList(stopwatches)
-        stopwatchAdapter.notifyDataSetChanged()
+        timerAdapter.submitList(timers.toList())
+        timerAdapter.notifyDataSetChanged()
     }
 
     private fun isInputValid() : Boolean {
@@ -101,8 +112,8 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
     }
 
     private fun findStartedTimerId() : Int {
-        stopwatches.forEachIndexed { index, stopwatch ->
-            if (stopwatch.isStarted) {
+        timers.forEachIndexed { index, timer ->
+            if (timer.isStarted) {
                 return index
             }
         }
@@ -111,17 +122,26 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
     }
 
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        outState.putInt(NEXT_ID, nextId)
+        outState.putBoolean(IS_ANY_TIMER_ON, isAnyTimerOn)
+
+        outState.putParcelableArrayList(TIMERS_ARRAY, timers as ArrayList<Timer>)
+    }
+
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun onAppBackgrounded() {
         if (isAnyTimerOn) {
             val startedTimerId = findStartedTimerId()
 
-            println(stopwatches[startedTimerId].startTime)
             val startIntent = Intent(this, ForegroundService::class.java)
             startIntent.putExtra(COMMAND_ID, COMMAND_START)
-            startIntent.putExtra(STARTED_TIMER_TIME_MS, stopwatches[startedTimerId].startTime)
-            startIntent.putExtra(TIME_LEFT, stopwatches[startedTimerId].msLeft)
+            startIntent.putExtra(STARTED_TIMER_TIME_MS, timers[startedTimerId].startTime)
+            startIntent.putExtra(TIME_LEFT, timers[startedTimerId].msLeft)
+
             startService(startIntent)
         }
     }
@@ -132,5 +152,11 @@ class MainActivity : AppCompatActivity(), StopwatchListener, LifecycleObserver {
         val stopIntent = Intent(this, ForegroundService::class.java)
         stopIntent.putExtra(COMMAND_ID, COMMAND_STOP)
         startService(stopIntent)
+    }
+
+    companion object {
+        private const val NEXT_ID = "NEXT ID"
+        private const val IS_ANY_TIMER_ON = "IS ANY TIMER ON"
+        private const val TIMERS_ARRAY = "TIMERS ARRAY"
     }
 }

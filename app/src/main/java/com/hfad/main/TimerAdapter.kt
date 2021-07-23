@@ -6,33 +6,33 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.hfad.main.databinding.TimerLayoutBinding
 
-class StopwatchAdapter(private val listener: StopwatchListener)
-    : ListAdapter<Stopwatch, StopwatchViewHolder>(itemComparator) {
+class TimerAdapter(private val listener: TimerListener)
+    : ListAdapter<Timer, TimerViewHolder>(itemComparator) {
 
     private companion object {
 
-        private val itemComparator = object : DiffUtil.ItemCallback<Stopwatch>() {
+        private val itemComparator = object : DiffUtil.ItemCallback<Timer>() {
 
-            override fun areItemsTheSame(oldItem: Stopwatch, newItem: Stopwatch): Boolean {
+            override fun areItemsTheSame(oldItem: Timer, newItem: Timer): Boolean {
                 return oldItem.id == newItem.id
             }
 
-            override fun areContentsTheSame(oldItem: Stopwatch, newItem: Stopwatch): Boolean {
+            override fun areContentsTheSame(oldItem: Timer, newItem: Timer): Boolean {
                 return oldItem.msLeft == newItem.msLeft &&
                         oldItem.isStarted == newItem.isStarted
             }
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StopwatchViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TimerViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         val binding = TimerLayoutBinding.inflate(layoutInflater, parent, false)
 
 
-        return StopwatchViewHolder(binding,  listener, binding.root.context.resources)
+        return TimerViewHolder(binding,  listener, binding.root.context.resources)
     }
 
-    override fun onBindViewHolder(holder: StopwatchViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: TimerViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 }

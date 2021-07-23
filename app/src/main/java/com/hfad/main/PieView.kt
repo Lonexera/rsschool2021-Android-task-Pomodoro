@@ -8,7 +8,7 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.AttrRes
 
-class CustomView @JvmOverloads constructor(
+class PieView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     @AttrRes defStyleAttr: Int = 0

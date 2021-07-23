@@ -44,8 +44,8 @@
                 app:layout_constraintStart_toEndOf="@id/blinking_indicator"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <com.hfad.main.CustomView
-                android:id="@+id/custom_view"
+            <com.hfad.main.PieView
+                android:id="@+id/pie_view"
                 android:layout_width="25dp"
                 android:layout_height="25dp"
                 app:custom_color="@color/red_700"
@@ -59,7 +59,7 @@
                 android:id="@+id/start_stop_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintStart_toEndOf="@+id/custom_view"
+                app:layout_constraintStart_toEndOf="@+id/pie_view"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/delete_button"
