@@ -117,7 +117,7 @@ class MainActivity : AppCompatActivity(), TimerListener, LifecycleObserver {
 
     private fun isInputValid() : Boolean {
         val inputText = binding.inputMinutes.text.toString()
-        return inputText.matches("""[0-9]{1,3}""".toRegex())
+        return inputText.matches("""[0-9]{1,4}""".toRegex())
     }
 
     private fun findStartedTimerId() : Int {
