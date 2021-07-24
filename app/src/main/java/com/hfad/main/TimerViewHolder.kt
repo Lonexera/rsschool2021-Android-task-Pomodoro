@@ -21,6 +21,7 @@ class TimerViewHolder(private val binding: TimerLayoutBinding,
     fun bind(timer: Timer) {
         binding.stopwatchTimer.text = timer.msLeft.displayTime()
         binding.pieView.setWholeMs(timer.wholeMs)
+        binding.pieView.setCurrent(timer.msLeft)
 
         if (timer.wholeMs == 0L) {
             disableView()
@@ -77,13 +78,13 @@ class TimerViewHolder(private val binding: TimerLayoutBinding,
     private fun continueTimer(timer: Timer)  {
         job = GlobalScope.launch(Dispatchers.Main) {
             while (true) {
-                val timePassed = timer.msLeft -
+                val timeLeft = timer.msLeft -
                         (System.currentTimeMillis() - timer.startTime)
 
-                binding.stopwatchTimer.text = timePassed.displayTime()
-                binding.pieView.setCurrent(timePassed)
+                binding.stopwatchTimer.text = timeLeft.displayTime()
+                binding.pieView.setCurrent(timeLeft)
 
-                if (timePassed <= 0) {
+                if (timeLeft <= 0) {
                     binding.stopwatchTimer.text = timer.wholeMs.displayTime()
                     disableView()
                     stopTimer(timer)
