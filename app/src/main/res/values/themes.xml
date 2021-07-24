@@ -12,16 +12,10 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
+
+        <item name="colorControlActivated">@color/red_200</item>
+        <item name="colorControlHighlight">@color/red_200</item>
     </style>
 
-    <style name="Widget.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-        <item name="hintTextAppearance">@style/TextAppearance.TextInputLayout.HintText</item>
-        <item name="hintTextColor">@color/red_500</item>
-        <item name="android:paddingBottom">3dp</item>
-        <item name="boxStrokeColor">@color/red_700</item>
-    </style>
 
-    <style name="TextAppearance.TextInputLayout.HintText" parent="TextAppearance.MaterialComponents.Subtitle2">
-        <item name="android:textColor">?android:attr/textColorPrimary</item>
-    </style>
 </resources>

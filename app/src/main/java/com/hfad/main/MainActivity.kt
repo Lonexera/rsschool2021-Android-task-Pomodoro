@@ -71,6 +71,15 @@ class MainActivity : AppCompatActivity(), TimerListener, LifecycleObserver {
 
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        outState.putInt(NEXT_ID, nextId)
+        outState.putBoolean(IS_ANY_TIMER_ON, isAnyTimerOn)
+
+        outState.putParcelableArrayList(TIMERS_ARRAY, timers as ArrayList<Timer>)
+    }
+
     override fun start(id: Int) {
         if (isAnyTimerOn) {
             val timerId: Int = findStartedTimerId()
@@ -121,15 +130,6 @@ class MainActivity : AppCompatActivity(), TimerListener, LifecycleObserver {
         return NOT_FOUND
     }
 
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-
-        outState.putInt(NEXT_ID, nextId)
-        outState.putBoolean(IS_ANY_TIMER_ON, isAnyTimerOn)
-
-        outState.putParcelableArrayList(TIMERS_ARRAY, timers as ArrayList<Timer>)
-    }
 
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
