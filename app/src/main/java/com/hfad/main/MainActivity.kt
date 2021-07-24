@@ -82,19 +82,20 @@ class MainActivity : AppCompatActivity(), TimerListener, LifecycleObserver {
 
     override fun start(id: Int) {
         if (isAnyTimerOn) {
-            val timerId: Int = findStartedTimerId()
-            if (timerId != NOT_FOUND) {
-                val msPassed = System.currentTimeMillis() - timers[timerId].startTime
-                stop(timerId, timers[timerId].msLeft - msPassed)
-            }
+            val startedTimer = timers.find { it.isStarted }
+            if (startedTimer != null) {
+                val msPassed = System.currentTimeMillis() - startedTimer.startTime
+                stop(startedTimer.id, startedTimer.msLeft - msPassed)
+            } else
+                isAnyTimerOn = false
         }
 
-        changeStopwatch(id, null, true)
+        changeTimer(id, null, true)
         isAnyTimerOn = true
     }
 
     override fun stop(id: Int, msLeft: Long) {
-        changeStopwatch(id, msLeft, false)
+        changeTimer(id, msLeft, false)
         isAnyTimerOn = false
     }
 
@@ -103,7 +104,7 @@ class MainActivity : AppCompatActivity(), TimerListener, LifecycleObserver {
         timerAdapter.submitList(timers.toList())
     }
 
-    private fun changeStopwatch(id: Int, msLeft: Long?, isStarted: Boolean) {
+    private fun changeTimer(id: Int, msLeft: Long?, isStarted: Boolean) {
 
         timers.forEach { timer ->
             if (timer.id == id) {
@@ -120,35 +121,25 @@ class MainActivity : AppCompatActivity(), TimerListener, LifecycleObserver {
         return inputText.matches("""[0-9]{1,4}""".toRegex())
     }
 
-    private fun findStartedTimerId() : Int {
-        timers.forEachIndexed { index, timer ->
-            if (timer.isStarted) {
-                return index
-            }
-        }
-
-        return NOT_FOUND
-    }
-
-
-
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun onAppBackgrounded() {
         if (isAnyTimerOn) {
-            val startedTimerId = findStartedTimerId()
+            val startedTimer = timers.find { it.isStarted }
 
-            val startIntent = Intent(this, ForegroundService::class.java)
-            startIntent.putExtra(COMMAND_ID, COMMAND_START)
-            startIntent.putExtra(STARTED_TIMER_TIME_MS, timers[startedTimerId].startTime)
-            startIntent.putExtra(TIME_LEFT, timers[startedTimerId].msLeft)
+            if (startedTimer != null) {
+                val startIntent = Intent(this, ForegroundService::class.java)
+                startIntent.putExtra(COMMAND_ID, COMMAND_START)
+                startIntent.putExtra(STARTED_TIMER_TIME_MS, startedTimer.startTime)
+                startIntent.putExtra(TIME_LEFT, startedTimer.msLeft)
 
-            startService(startIntent)
+                startService(startIntent)
+            }
         }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun onAppForegrounded() {
-
+        
         val stopIntent = Intent(this, ForegroundService::class.java)
         stopIntent.putExtra(COMMAND_ID, COMMAND_STOP)
         startService(stopIntent)

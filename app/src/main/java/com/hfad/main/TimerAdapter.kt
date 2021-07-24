@@ -19,7 +19,8 @@ class TimerAdapter(private val listener: TimerListener)
 
             override fun areContentsTheSame(oldItem: Timer, newItem: Timer): Boolean {
                 return oldItem.msLeft == newItem.msLeft &&
-                        oldItem.isStarted == newItem.isStarted
+                        oldItem.isStarted == newItem.isStarted &&
+                        oldItem.wholeMs == newItem.wholeMs
             }
         }
     }
