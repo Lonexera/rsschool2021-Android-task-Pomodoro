@@ -71,6 +71,11 @@ class MainActivity : AppCompatActivity(), TimerListener, LifecycleObserver {
 
     }
 
+    override fun onDestroy() {
+        onAppForegrounded()
+        super.onDestroy()
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 

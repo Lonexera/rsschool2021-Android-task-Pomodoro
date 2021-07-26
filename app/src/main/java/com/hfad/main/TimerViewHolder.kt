@@ -100,7 +100,7 @@ class TimerViewHolder(private val binding: TimerLayoutBinding,
             cardView.setBackgroundColor(Color.RED)
             stopwatchTimer.setTextColor(Color.WHITE)
 
-            pieView.isVisible = false
+            pieView.changeColor(Color.TRANSPARENT)
             startStopButton.isEnabled = false
             deleteButton.setColorFilter(Color.WHITE)
             deleteButton.setBackgroundColor(Color.RED)
@@ -112,7 +112,6 @@ class TimerViewHolder(private val binding: TimerLayoutBinding,
             cardView.setBackgroundColor(Color.WHITE)
             stopwatchTimer.setTextColor(Color.GRAY)
 
-            pieView.isVisible = true
             startStopButton.isEnabled = true
             deleteButton.setColorFilter(Color.RED)
             deleteButton.setBackgroundColor(Color.WHITE)

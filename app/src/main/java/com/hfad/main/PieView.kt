@@ -72,4 +72,8 @@ class PieView @JvmOverloads constructor(
         private const val FILL = 0
     }
 
+    fun changeColor(color: Int) {
+        paint.color = color
+    }
+
 }
