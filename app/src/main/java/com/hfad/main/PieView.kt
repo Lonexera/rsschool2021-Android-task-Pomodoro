@@ -55,9 +55,7 @@ class PieView @JvmOverloads constructor(
         )
     }
 
-    /**
-     * Set lasted milliseconds
-     */
+
     fun setCurrent(current: Long) {
         currentMs = current
         invalidate()
@@ -67,13 +65,15 @@ class PieView @JvmOverloads constructor(
         this.wholeMs = wholeMs
     }
 
+    fun changeColor(color: Int) {
+        paint.color = color
+    }
+
     private companion object {
 
         private const val FILL = 0
     }
 
-    fun changeColor(color: Int) {
-        paint.color = color
-    }
+
 
 }
