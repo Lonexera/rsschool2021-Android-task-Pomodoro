@@ -131,11 +131,11 @@ class MainActivity : AppCompatActivity(), TimerListener, LifecycleObserver {
         if (isAnyTimerOn) {
             val startedTimer = timers.find { it.isStarted }
 
-            if (startedTimer != null) {
+            startedTimer?.let {
                 val startIntent = Intent(this, ForegroundService::class.java)
                 startIntent.putExtra(COMMAND_ID, COMMAND_START)
-                startIntent.putExtra(STARTED_TIMER_TIME_MS, startedTimer.startTime)
-                startIntent.putExtra(TIME_LEFT, startedTimer.msLeft)
+                startIntent.putExtra(STARTED_TIMER_TIME_MS, it.startTime)
+                startIntent.putExtra(TIME_LEFT, it.msLeft)
 
                 startService(startIntent)
             }

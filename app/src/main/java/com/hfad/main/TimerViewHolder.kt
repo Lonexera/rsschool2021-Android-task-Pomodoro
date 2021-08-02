@@ -23,8 +23,8 @@ class TimerViewHolder(private val binding: TimerLayoutBinding,
         binding.pieView.setWholeMs(timer.wholeMs)
         binding.pieView.setCurrent(timer.msLeft)
 
-        if (timer.wholeMs == 0L) {
-            disableView()
+        if (timer.msLeft <= 0L) {
+            disableView(timer.wholeMs)
         } else {
             enableView()
         }
@@ -32,7 +32,7 @@ class TimerViewHolder(private val binding: TimerLayoutBinding,
         if (timer.isStarted)
             startTimer(timer)
         else
-            stopTimer(timer)
+            stopTimer()
 
         initButtonsListeners(timer)
     }
@@ -48,7 +48,7 @@ class TimerViewHolder(private val binding: TimerLayoutBinding,
         (binding.blinkingIndicator.background as? AnimationDrawable)?.start()
     }
 
-    private fun stopTimer(timer: Timer) {
+    private fun stopTimer() {
         binding.startStopButton.setText(R.string.start_button_text)
 
         job?.cancel()
@@ -69,7 +69,7 @@ class TimerViewHolder(private val binding: TimerLayoutBinding,
         }
 
         binding.deleteButton.setOnClickListener {
-            stopTimer(timer)
+            stopTimer()
             listener.delete(timer.id)
         }
     }
@@ -85,9 +85,9 @@ class TimerViewHolder(private val binding: TimerLayoutBinding,
                 binding.pieView.setCurrent(timeLeft)
 
                 if (timeLeft <= 0) {
-                    binding.stopwatchTimer.text = timer.wholeMs.displayTime()
-                    disableView()
-                    stopTimer(timer)
+                    disableView(timer.wholeMs)
+                    listener.stop(timer.id, timeLeft)
+                    stopTimer()
                 }
 
                 delay(INTERVAL_MS)
@@ -95,8 +95,10 @@ class TimerViewHolder(private val binding: TimerLayoutBinding,
         }
     }
 
-    private fun disableView() {
+    private fun disableView(wholeMs: Long) {
         with(binding) {
+            stopwatchTimer.text = wholeMs.displayTime()
+
             cardView.setBackgroundColor(Color.RED)
             stopwatchTimer.setTextColor(Color.WHITE)
 
